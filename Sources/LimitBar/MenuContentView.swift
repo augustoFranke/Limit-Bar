@@ -19,8 +19,8 @@ struct MenuContentView: View {
             Divider()
             footer
         }
-        .background(Color.clear)
-        .environment(\.colorScheme, .dark)
+        .foregroundStyle(.primary)
+        .background(Color(nsColor: .windowBackgroundColor))
     }
 
     private var header: some View {
@@ -104,6 +104,10 @@ struct AccountCard: View {
             content
         }
         .padding(10)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(Color(nsColor: .controlBackgroundColor).opacity(0.72))
+        )
         .overlay(
             RoundedRectangle(cornerRadius: 8)
                 .stroke(Color(nsColor: .separatorColor).opacity(0.35), lineWidth: 0.5)
