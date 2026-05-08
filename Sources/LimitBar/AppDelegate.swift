@@ -7,7 +7,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
     private let model = AccountsModel()
     private var statusItem: NSStatusItem?
     private var popover: NSPopover?
-    private var eventMonitor: Any?
+    private var localEventMonitor: Any?
+    private var globalEventMonitor: Any?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
@@ -21,9 +22,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
 
     func applicationWillTerminate(_ notification: Notification) {
         popover?.performClose(nil)
-        if let monitor = eventMonitor {
-            NSEvent.removeMonitor(monitor)
-        }
+        stopOutsideClickMonitoring()
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
@@ -54,6 +53,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         popover.contentSize = NSSize(width: 360, height: 500)
         popover.behavior = .transient
         popover.animates = true
+        popover.delegate = self
 
         self.statusItem = item
         self.popover = popover
@@ -62,11 +62,61 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
     @objc private func togglePopover(_ sender: AnyObject?) {
         guard let popover, let button = statusItem?.button else { return }
         if popover.isShown {
-            popover.performClose(sender)
+            closePopover(sender)
         } else {
             popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
             popover.contentViewController?.view.window?.makeKey()
+            startOutsideClickMonitoring()
         }
+    }
+
+    private func closePopover(_ sender: AnyObject?) {
+        popover?.performClose(sender)
+        stopOutsideClickMonitoring()
+    }
+
+    private func startOutsideClickMonitoring() {
+        stopOutsideClickMonitoring()
+
+        localEventMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] event in
+            guard let self else { return event }
+            return self.handleLocalMouseDown(event)
+        }
+
+        globalEventMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
+            Task { @MainActor in
+                self?.closePopover(nil)
+            }
+        }
+    }
+
+    private func stopOutsideClickMonitoring() {
+        if let localEventMonitor {
+            NSEvent.removeMonitor(localEventMonitor)
+            self.localEventMonitor = nil
+        }
+        if let globalEventMonitor {
+            NSEvent.removeMonitor(globalEventMonitor)
+            self.globalEventMonitor = nil
+        }
+    }
+
+    private func handleLocalMouseDown(_ event: NSEvent) -> NSEvent? {
+        guard popover?.isShown == true else { return event }
+        if event.window == popover?.contentViewController?.view.window {
+            return event
+        }
+        closePopover(nil)
+        return clickIsInStatusItem(event) ? nil : event
+    }
+
+    private func clickIsInStatusItem(_ event: NSEvent) -> Bool {
+        guard let button = statusItem?.button,
+              event.window == button.window else {
+            return false
+        }
+        let point = button.convert(event.locationInWindow, from: nil)
+        return button.bounds.contains(point)
     }
 
     nonisolated func userNotificationCenter(
@@ -75,5 +125,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
     ) {
         completionHandler([.banner, .sound])
+    }
+}
+
+extension AppDelegate: NSPopoverDelegate {
+    func popoverDidClose(_ notification: Notification) {
+        stopOutsideClickMonitoring()
     }
 }
