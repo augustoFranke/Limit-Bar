@@ -1,0 +1,19 @@
+# Build artifacts
+.build/
+.spm-build/
+.swiftpm-cache/
+.clang-module-cache/
+.tmp/
+build/
+
+# macOS
+.DS_Store
+
+# Claude Code session data
+.claude/
+
+# Xcode
+*.xcodeproj
+*.xcworkspace
+xcuserdata/
+DerivedData/
