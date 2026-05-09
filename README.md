@@ -2,7 +2,7 @@
 
 Native macOS menu-bar app for monitoring AI usage limits across multiple accounts. Supports isolated Codex (ChatGPT) accounts and Claude Code — no cookies, session keys, or API keys to paste.
 
-![macOS 14+](https://img.shields.io/badge/macOS-14%2B-blue) ![Swift 5.9+](https://img.shields.io/badge/Swift-5.9%2B-orange)
+![macOS 14+](https://img.shields.io/badge/macOS-14%2B-blue)
 
 ## Features
 
@@ -15,7 +15,7 @@ Native macOS menu-bar app for monitoring AI usage limits across multiple account
 
 ## Install
 
-Download `Limit Bar.dmg` from the [latest release](../../releases/latest), open it, and drag **Limit Bar** to your Applications folder.
+Download `Limit Bar.dmg` from the [latest release](https://github.com/augustoFranke/Limit-Bar/releases/latest), open it, and drag **Limit Bar** to your Applications folder.
 
 > **First launch on macOS 14+:** Apple will warn about an unnotarised app. Right-click (or Control-click) **Limit Bar.app** and choose **Open**, then confirm. You only need to do this once.
 
