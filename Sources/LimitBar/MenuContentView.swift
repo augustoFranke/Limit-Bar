@@ -74,8 +74,6 @@ struct MenuContentView: View {
 struct AccountCard: View {
     @EnvironmentObject private var model: AccountsModel
     let slot: AccountSlot
-    @State private var showsActions = false
-
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .firstTextBaseline) {
@@ -95,10 +93,6 @@ struct AccountCard: View {
                 }
                 Spacer()
                 statusControl
-            }
-
-            if showsActions {
-                accountActions
             }
 
             content
@@ -184,55 +178,36 @@ struct AccountCard: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
         } else {
-            Button {
-                showsActions.toggle()
+            Menu {
+                if actions.contains(.refresh) {
+                    Button {
+                        Task { await model.refresh(slot.id) }
+                    } label: {
+                        Label("Refresh", systemImage: "arrow.clockwise")
+                    }
+                }
+                if actions.contains(.remove) {
+                    Button(role: .destructive) {
+                        model.removeAccount(slot.id)
+                    } label: {
+                        Label("Remove", systemImage: "rectangle.portrait.and.arrow.right")
+                    }
+                } else if actions.contains(.logout) {
+                    Button(role: .destructive) {
+                        Task { await model.logout(slot.id) }
+                    } label: {
+                        Label("Logout", systemImage: "rectangle.portrait.and.arrow.right")
+                    }
+                }
             } label: {
-                Image(systemName: showsActions ? "ellipsis.circle.fill" : "ellipsis.circle")
+                Image(systemName: "ellipsis.circle")
             }
-            .buttonStyle(.plain)
+            .menuStyle(.borderlessButton)
+            .menuIndicator(.hidden)
+            .fixedSize()
             .focusEffectDisabled()
             .help("Account actions")
-            .fixedSize()
         }
-    }
-
-    @ViewBuilder
-    private var accountActions: some View {
-        let actions = slot.availableActions
-        HStack(spacing: 8) {
-            if actions.contains(.refresh) {
-                Button {
-                    showsActions = false
-                    Task { await model.refresh(slot.id) }
-                } label: {
-                    Label("Refresh", systemImage: "arrow.clockwise")
-                }
-                .buttonStyle(.borderless)
-                .controlSize(.small)
-            }
-
-            if actions.contains(.remove) {
-                Button(role: .destructive) {
-                    showsActions = false
-                    model.removeAccount(slot.id)
-                } label: {
-                    Label("Remove", systemImage: "rectangle.portrait.and.arrow.right")
-                }
-                .buttonStyle(.borderless)
-                .controlSize(.small)
-            } else if actions.contains(.logout) {
-                Button(role: .destructive) {
-                    showsActions = false
-                    Task { await model.logout(slot.id) }
-                } label: {
-                    Label("Logout", systemImage: "rectangle.portrait.and.arrow.right")
-                }
-                .buttonStyle(.borderless)
-                .controlSize(.small)
-            }
-        }
-        .font(.caption)
-        .frame(maxWidth: .infinity, alignment: .trailing)
     }
 
     private var statusText: String {

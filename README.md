@@ -13,10 +13,15 @@ Native macOS menu-bar app for monitoring AI usage limits across multiple account
 - **Auto-refresh** — polls every minute and force-refreshes on wake from sleep; manual refresh button always available.
 - **Last-known limits** — if a session expires, the last-known usage is shown dimmed with a "Login required" banner so you still have context while re-authenticating.
 
-## Requirements
+## Install
+
+Download `Limit Bar.dmg` from the [latest release](../../releases/latest), open it, and drag **Limit Bar** to your Applications folder.
+
+> **First launch on macOS 14+:** Apple will warn about an unnotarised app. Right-click (or Control-click) **Limit Bar.app** and choose **Open**, then confirm. You only need to do this once.
+
+**Requirements**
 
 - macOS 14 (Sonoma) or later
-- Swift 5.9+ (for building from source)
 - [Codex CLI](https://github.com/openai/codex) at `/opt/homebrew/bin/codex` or `/usr/local/bin/codex` (for Codex accounts)
 - [Claude Code CLI](https://claude.ai/claude-code) with an active `claude login` session (for Claude accounts)
 
@@ -38,11 +43,16 @@ Limit Bar reads the OAuth token written by the Claude Code CLI to `~/.claude/.cr
 
 If credentials expire, the slot shows "Login required" with last-known limits dimmed. Run `claude login` again and click **Log in** in the menu to refresh.
 
-## Build and Run
+## Build from Source
+
+Requires Swift 5.9+.
 
 ```bash
 # Build the .app bundle and open it
 make run
+
+# Package a distributable DMG
+make dmg
 
 # Build only
 make app
@@ -57,4 +67,4 @@ swift test
 make clean
 ```
 
-The compiled app bundle is placed at `build/Limit Bar.app`. To install, copy it to `/Applications`.
+The compiled app bundle is placed at `build/Limit Bar.app`; the DMG at `build/Limit Bar.dmg`.
