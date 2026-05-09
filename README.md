@@ -45,26 +45,11 @@ If credentials expire, the slot shows "Login required" with last-known limits di
 
 ## Build from Source
 
-Requires Swift 5.9+.
+Requires Swift 5.9+. Clone the repo, then:
 
 ```bash
-# Build the .app bundle and open it
-make run
-
-# Package a distributable DMG
-make dmg
-
-# Build only
-make app
-
-# Debug build via Swift Package Manager
-swift build
-
-# Run tests
-swift test
-
-# Remove all build artifacts
-make clean
+make run    # build and open
+make dmg    # package a distributable DMG
+swift test  # run tests
+make clean  # remove build artifacts
 ```
-
-The compiled app bundle is placed at `build/Limit Bar.app`; the DMG at `build/Limit Bar.dmg`.
