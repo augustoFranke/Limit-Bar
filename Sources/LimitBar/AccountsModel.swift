@@ -30,7 +30,7 @@ final class AccountsModel: ObservableObject {
         claudeSource: any AccountUsageSource,
         slotStore: any AccountSlotStoring = UserDefaultsAccountSlotStore(),
         notifications: any AccountNotificationScheduling = LimitNotificationScheduler.shared,
-        presentAddAccountError: @escaping @MainActor (AccountProvider, String) -> Void = AccountsModel.showAddAccountError
+        presentAddAccountError: (@MainActor (AccountProvider, String) -> Void)? = nil
     ) {
         self.sources = [
             .codex: codexSource,
@@ -38,7 +38,7 @@ final class AccountsModel: ObservableObject {
         ]
         self.slotStore = slotStore
         self.notifications = notifications
-        self.presentAddAccountError = presentAddAccountError
+        self.presentAddAccountError = presentAddAccountError ?? AccountsModel.showAddAccountError
         self.slots = slotStore.restoreSlots()
     }
 
