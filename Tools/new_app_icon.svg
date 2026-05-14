@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#2E2E30"/>
+      <stop offset="100%" stop-color="#242426"/>
+    </linearGradient>
+
+    <radialGradient id="spec" cx="30%" cy="22%" r="55%">
+      <stop offset="0%"   stop-color="#FFFFFF" stop-opacity="0.18"/>
+      <stop offset="60%"  stop-color="#FFFFFF" stop-opacity="0.04"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+
+    <radialGradient id="refract" cx="70%" cy="100%" r="60%">
+      <stop offset="0%"   stop-color="#FFFFFF" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+
+    <linearGradient id="rim" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#FFFFFF" stop-opacity="0.35"/>
+      <stop offset="50%"  stop-color="#FFFFFF" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.20"/>
+    </linearGradient>
+
+    <clipPath id="squircle">
+      <rect x="0" y="0" width="1024" height="1024" rx="229" ry="229"/>
+    </clipPath>
+  </defs>
+
+  <rect x="0" y="0" width="1024" height="1024" rx="229" ry="229" fill="url(#bg)"/>
+
+  <g clip-path="url(#squircle)">
+    <rect x="0" y="0" width="1024" height="1024" fill="url(#spec)"/>
+    <rect x="0" y="0" width="1024" height="1024" fill="url(#refract)"/>
+  </g>
+
+  <rect x="3" y="3" width="1018" height="1018" rx="227" ry="227"
+        fill="none" stroke="url(#rim)" stroke-width="2"/>
+
+  <!-- Single centered bar: track + ~62% fill -->
+  <rect x="160" y="448" width="704" height="128" rx="64" ry="64"
+        fill="#FFFFFF" fill-opacity="0.16"/>
+  <rect x="160" y="448" width="437" height="128" rx="64" ry="64"
+        fill="#FFFFFF" fill-opacity="0.95"/>
+</svg>
