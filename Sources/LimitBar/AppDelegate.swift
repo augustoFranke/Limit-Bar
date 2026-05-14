@@ -4,11 +4,16 @@ import UserNotifications
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDelegate {
+    private enum MenuLayout {
+        static let width: CGFloat = 360
+    }
+
     private let model = AccountsModel()
     private var statusItem: NSStatusItem?
-    private var popover: NSPopover?
-    private var localEventMonitor: Any?
-    private var globalEventMonitor: Any?
+    private var menu: NSMenu?
+    private var menuContentItem: NSMenuItem?
+    private var addCodexMenuItem: NSMenuItem?
+    private var addClaudeMenuItem: NSMenuItem?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
@@ -21,8 +26,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
     }
 
     func applicationWillTerminate(_ notification: Notification) {
-        popover?.performClose(nil)
-        stopOutsideClickMonitoring()
+        menu?.cancelTracking()
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
@@ -37,86 +41,81 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
             button.image = StatusIconFactory.makeImage()
             button.imagePosition = .imageOnly
             button.toolTip = "Limit Bar"
-            button.target = self
-            button.action = #selector(togglePopover(_:))
         }
 
         let rootView = MenuContentView()
             .environmentObject(model)
-            .frame(width: 360, height: 500)
+            .frame(width: MenuLayout.width)
 
-        let hostingController = NSHostingController(rootView: rootView)
-        hostingController.view.frame = NSRect(x: 0, y: 0, width: 360, height: 500)
+        let hostingView = NSHostingView(rootView: rootView)
+        let fittingHeight = hostingView.fittingSize.height
+        hostingView.frame = NSRect(x: 0, y: 0, width: MenuLayout.width, height: fittingHeight)
+        hostingView.wantsLayer = true
+        hostingView.layer?.backgroundColor = NSColor.clear.cgColor
 
-        let popover = NSPopover()
-        popover.contentViewController = hostingController
-        popover.contentSize = NSSize(width: 360, height: 500)
-        popover.behavior = .transient
-        popover.animates = true
-        popover.delegate = self
+        let contentItem = NSMenuItem()
+        contentItem.view = hostingView
+
+        let menu = NSMenu()
+        menu.autoenablesItems = false
+        menu.addItem(contentItem)
+        menu.addItem(.separator())
+        menu.addItem(makeAddAccountMenuItem())
+        menu.addItem(.separator())
+        menu.addItem(makeQuitMenuItem())
+        menu.delegate = self
+        item.menu = menu
 
         self.statusItem = item
-        self.popover = popover
+        self.menu = menu
+        self.menuContentItem = contentItem
     }
 
-    @objc private func togglePopover(_ sender: AnyObject?) {
-        guard let popover, let button = statusItem?.button else { return }
-        if popover.isShown {
-            closePopover(sender)
-        } else {
-            popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
-            popover.contentViewController?.view.window?.makeKey()
-            startOutsideClickMonitoring()
-        }
+    private func makeAddAccountMenuItem() -> NSMenuItem {
+        let addAccountMenu = NSMenu()
+
+        let addCodex = NSMenuItem(
+            title: "Add Codex",
+            action: #selector(addCodexAccount(_:)),
+            keyEquivalent: ""
+        )
+        addCodex.target = self
+        addAccountMenu.addItem(addCodex)
+
+        let addClaude = NSMenuItem(
+            title: "Add Claude",
+            action: #selector(addClaudeAccount(_:)),
+            keyEquivalent: ""
+        )
+        addClaude.target = self
+        addAccountMenu.addItem(addClaude)
+
+        let addAccount = NSMenuItem(title: "Add account", action: nil, keyEquivalent: "")
+        addAccount.submenu = addAccountMenu
+
+        self.addCodexMenuItem = addCodex
+        self.addClaudeMenuItem = addClaude
+        return addAccount
     }
 
-    private func closePopover(_ sender: AnyObject?) {
-        popover?.performClose(sender)
-        stopOutsideClickMonitoring()
+    private func makeQuitMenuItem() -> NSMenuItem {
+        let quit = NSMenuItem(title: "Quit", action: #selector(quit(_:)), keyEquivalent: "q")
+        quit.target = self
+        return quit
     }
 
-    private func startOutsideClickMonitoring() {
-        stopOutsideClickMonitoring()
-
-        localEventMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] event in
-            guard let self else { return event }
-            return self.handleLocalMouseDown(event)
-        }
-
-        globalEventMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
-            Task { @MainActor in
-                self?.closePopover(nil)
-            }
-        }
+    @objc private func addCodexAccount(_ sender: NSMenuItem) {
+        guard model.pendingAdd == nil else { return }
+        Task { await model.addCodexAccount() }
     }
 
-    private func stopOutsideClickMonitoring() {
-        if let localEventMonitor {
-            NSEvent.removeMonitor(localEventMonitor)
-            self.localEventMonitor = nil
-        }
-        if let globalEventMonitor {
-            NSEvent.removeMonitor(globalEventMonitor)
-            self.globalEventMonitor = nil
-        }
+    @objc private func addClaudeAccount(_ sender: NSMenuItem) {
+        guard model.pendingAdd == nil else { return }
+        Task { await model.addClaudeAccount() }
     }
 
-    private func handleLocalMouseDown(_ event: NSEvent) -> NSEvent? {
-        guard popover?.isShown == true else { return event }
-        if event.window == popover?.contentViewController?.view.window {
-            return event
-        }
-        closePopover(nil)
-        return clickIsInStatusItem(event) ? nil : event
-    }
-
-    private func clickIsInStatusItem(_ event: NSEvent) -> Bool {
-        guard let button = statusItem?.button,
-              event.window == button.window else {
-            return false
-        }
-        let point = button.convert(event.locationInWindow, from: nil)
-        return button.bounds.contains(point)
+    @objc private func quit(_ sender: NSMenuItem) {
+        NSApplication.shared.terminate(nil)
     }
 
     nonisolated func userNotificationCenter(
@@ -128,8 +127,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
     }
 }
 
-extension AppDelegate: NSPopoverDelegate {
-    func popoverDidClose(_ notification: Notification) {
-        stopOutsideClickMonitoring()
+extension AppDelegate: NSMenuDelegate {
+    func menuWillOpen(_ menu: NSMenu) {
+        let canAddAccount = model.pendingAdd == nil
+        addCodexMenuItem?.isEnabled = canAddAccount
+        addClaudeMenuItem?.isEnabled = canAddAccount
+
+        if let hostingView = menuContentItem?.view {
+            let fitting = hostingView.fittingSize
+            hostingView.frame = NSRect(x: 0, y: 0, width: MenuLayout.width, height: fitting.height)
+        }
     }
 }
