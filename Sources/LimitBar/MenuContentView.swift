@@ -46,16 +46,10 @@ struct MenuContentView: View {
     }
 
     private var footer: some View {
-        HStack {
-            Text("Auto-refreshes every minute")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            Spacer()
-            Button("Quit") {
-                NSApplication.shared.terminate(nil)
-            }
-            .buttonStyle(.borderless)
-        }
+        Text("Auto-refreshes every minute")
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 12)
         .padding(.vertical, 9)
     }
