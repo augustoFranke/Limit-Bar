@@ -15,7 +15,7 @@ struct MenuContentView: View {
                 }
                 .padding(6)
             }
-            .frame(maxHeight: 520)
+            .frame(maxHeight: 360)
             Divider()
             footer
         }
