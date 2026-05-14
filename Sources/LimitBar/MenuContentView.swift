@@ -32,14 +32,6 @@ struct MenuContentView: View {
                 ProgressView()
                     .controlSize(.small)
             }
-            NativeAddAccountButton(
-                isBusy: model.pendingAdd != nil,
-                addCodex: { Task { await model.addCodexAccount() } },
-                addClaude: { Task { await model.addClaudeAccount() } }
-            )
-            .fixedSize()
-            .help("Add account")
-
             Button {
                 Task { await model.refreshAll() }
             } label: {
