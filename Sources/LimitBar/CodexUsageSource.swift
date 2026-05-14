@@ -127,12 +127,18 @@ final class CodexUsageSource: AccountUsageSource {
             id: slotID,
             provider: .codex,
             email: displayEmail,
-            planType: payload.planType ?? snapshot.planType,
+            planType: Self.planLabel(rawPlanType: payload.planType ?? snapshot.planType),
             status: .ready,
             weekly: mapped.weekly,
             fiveHour: mapped.fiveHour,
             lastRefresh: Date()
         )
+    }
+
+    static func planLabel(rawPlanType: String?) -> String? {
+        guard let rawPlanType, !rawPlanType.isEmpty else { return nil }
+        let humanized = rawPlanType.replacingOccurrences(of: "_", with: " ").capitalized
+        return "Codex・\(humanized)"
     }
 
     /// Codex returns opaque `LimitBarError.message(...)` for JSON-RPC errors.
