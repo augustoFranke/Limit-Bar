@@ -4,12 +4,12 @@ enum StatusIconFactory {
     static func makeImage() -> NSImage {
         if let url = Bundle.main.url(forResource: "StatusIcon", withExtension: "png"),
            let image = NSImage(contentsOf: url) {
-            image.size = NSSize(width: 18, height: 18)
+            image.size = NSSize(width: 22, height: 22)
             image.isTemplate = true
             return image
         }
 
-        let fallback = NSImage(size: NSSize(width: 18, height: 18))
+        let fallback = NSImage(size: NSSize(width: 22, height: 22))
         fallback.lockFocus()
         NSColor.labelColor.setStroke()
         let path = NSBezierPath()
