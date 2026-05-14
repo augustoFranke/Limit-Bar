@@ -81,14 +81,14 @@ struct AccountCard: View {
 
             content
         }
-        .padding(10)
+        .padding(8)
         .background(
             RoundedRectangle(cornerRadius: 8)
-                .fill(Color(nsColor: .controlBackgroundColor).opacity(0.72))
+                .fill(Color(nsColor: .controlBackgroundColor).opacity(0.48))
         )
         .overlay(
             RoundedRectangle(cornerRadius: 8)
-                .stroke(Color(nsColor: .separatorColor).opacity(0.35), lineWidth: 0.5)
+                .stroke(Color(nsColor: .separatorColor).opacity(0.24), lineWidth: 0.5)
         )
     }
 
