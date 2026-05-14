@@ -41,8 +41,8 @@ struct MenuContentView: View {
             .focusEffectDisabled()
             .help("Refresh now")
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 7)
     }
 
     private var footer: some View {
