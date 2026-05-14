@@ -8,12 +8,12 @@ struct MenuContentView: View {
             header
             Divider()
             ScrollView {
-                VStack(spacing: 10) {
+                VStack(spacing: 6) {
                     ForEach(model.slots) { slot in
                         AccountCard(slot: slot)
                     }
                 }
-                .padding(12)
+                .padding(6)
             }
             .frame(maxHeight: 520)
             Divider()
