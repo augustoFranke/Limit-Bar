@@ -25,8 +25,6 @@ struct MenuContentView: View {
 
     private var header: some View {
         HStack(spacing: 8) {
-            LimitBarMark()
-                .frame(width: 18, height: 18)
             Text("Limit Bar")
                 .font(.headline)
             Spacer()
