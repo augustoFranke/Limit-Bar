@@ -20,7 +20,6 @@ struct MenuContentView: View {
             footer
         }
         .foregroundStyle(.primary)
-        .background(Color(nsColor: .windowBackgroundColor))
     }
 
     private var header: some View {
