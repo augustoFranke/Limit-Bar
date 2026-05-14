@@ -5,13 +5,14 @@ import UserNotifications
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDelegate {
     private enum MenuLayout {
-        static let width: CGFloat = 360
+        static let width: CGFloat = 285
     }
 
     private let model = AccountsModel()
     private var statusItem: NSStatusItem?
     private var menu: NSMenu?
     private var menuContentItem: NSMenuItem?
+    private var refreshAllMenuItem: NSMenuItem?
     private var addCodexMenuItem: NSMenuItem?
     private var addClaudeMenuItem: NSMenuItem?
 
@@ -58,50 +59,60 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
 
         let menu = NSMenu()
         menu.autoenablesItems = false
+        menu.addItem(.sectionHeader(title: "Accounts"))
         menu.addItem(contentItem)
         menu.addItem(.separator())
-        menu.addItem(makeAddAccountMenuItem())
+
+        let refreshAll = NSMenuItem(
+            title: "Refresh All",
+            action: #selector(refreshAll(_:)),
+            keyEquivalent: "r"
+        )
+        refreshAll.keyEquivalentModifierMask = [.command]
+        refreshAll.target = self
+        menu.addItem(refreshAll)
+
         menu.addItem(.separator())
-        menu.addItem(makeQuitMenuItem())
+
+        let addCodex = NSMenuItem(
+            title: "Add Codex Account…",
+            action: #selector(addCodexAccount(_:)),
+            keyEquivalent: ""
+        )
+        addCodex.target = self
+        menu.addItem(addCodex)
+
+        let addClaude = NSMenuItem(
+            title: "Add Claude Account…",
+            action: #selector(addClaudeAccount(_:)),
+            keyEquivalent: ""
+        )
+        addClaude.target = self
+        menu.addItem(addClaude)
+
+        menu.addItem(.separator())
+
+        let quit = NSMenuItem(
+            title: "Quit Limit Bar",
+            action: #selector(quit(_:)),
+            keyEquivalent: "q"
+        )
+        quit.target = self
+        menu.addItem(quit)
+
         menu.delegate = self
         item.menu = menu
 
         self.statusItem = item
         self.menu = menu
         self.menuContentItem = contentItem
-    }
-
-    private func makeAddAccountMenuItem() -> NSMenuItem {
-        let addAccountMenu = NSMenu()
-
-        let addCodex = NSMenuItem(
-            title: "Add Codex",
-            action: #selector(addCodexAccount(_:)),
-            keyEquivalent: ""
-        )
-        addCodex.target = self
-        addAccountMenu.addItem(addCodex)
-
-        let addClaude = NSMenuItem(
-            title: "Add Claude",
-            action: #selector(addClaudeAccount(_:)),
-            keyEquivalent: ""
-        )
-        addClaude.target = self
-        addAccountMenu.addItem(addClaude)
-
-        let addAccount = NSMenuItem(title: "Add account", action: nil, keyEquivalent: "")
-        addAccount.submenu = addAccountMenu
-
+        self.refreshAllMenuItem = refreshAll
         self.addCodexMenuItem = addCodex
         self.addClaudeMenuItem = addClaude
-        return addAccount
     }
 
-    private func makeQuitMenuItem() -> NSMenuItem {
-        let quit = NSMenuItem(title: "Quit", action: #selector(quit(_:)), keyEquivalent: "q")
-        quit.target = self
-        return quit
+    @objc private func refreshAll(_ sender: NSMenuItem) {
+        Task { await model.refreshAll() }
     }
 
     @objc private func addCodexAccount(_ sender: NSMenuItem) {
@@ -132,6 +143,7 @@ extension AppDelegate: NSMenuDelegate {
         let canAddAccount = model.pendingAdd == nil
         addCodexMenuItem?.isEnabled = canAddAccount
         addClaudeMenuItem?.isEnabled = canAddAccount
+        refreshAllMenuItem?.isEnabled = !model.slots.isEmpty && !model.isRefreshing
 
         if let hostingView = menuContentItem?.view {
             let fitting = hostingView.fittingSize

@@ -4,193 +4,156 @@ struct MenuContentView: View {
     @EnvironmentObject private var model: AccountsModel
 
     var body: some View {
-        VStack(spacing: 0) {
-            header
-            Divider()
-            ScrollView {
-                VStack(spacing: 6) {
-                    ForEach(model.slots) { slot in
-                        AccountCard(slot: slot)
+        Group {
+            if model.slots.isEmpty {
+                emptyState
+            } else {
+                VStack(spacing: 0) {
+                    ForEach(Array(model.slots.enumerated()), id: \.element.id) { index, slot in
+                        if index > 0 {
+                            Divider()
+                        }
+                        AccountRow(slot: slot)
                     }
                 }
-                .padding(6)
             }
-            .frame(maxHeight: 360)
-            Divider()
-            footer
         }
         .foregroundStyle(.primary)
     }
 
-    private var header: some View {
-        HStack(spacing: 8) {
-            Text("Limit Bar")
-                .font(.headline)
+    private var emptyState: some View {
+        HStack {
+            Text("No accounts")
+                .font(.system(size: 13))
+                .foregroundStyle(.secondary)
             Spacer()
-            if model.isRefreshing || model.pendingAdd != nil {
-                ProgressView()
-                    .controlSize(.small)
-            }
-            Button {
-                Task { await model.refreshAll() }
-            } label: {
-                Image(systemName: "arrow.clockwise")
-            }
-            .buttonStyle(.plain)
-            .focusEffectDisabled()
-            .help("Refresh now")
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 7)
-    }
-
-    private var footer: some View {
-        Text("Auto-refreshes every minute")
-            .font(.caption)
-            .foregroundStyle(.secondary)
-            .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 10)
-        .padding(.vertical, 6)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
     }
 }
 
-struct AccountCard: View {
+struct AccountRow: View {
     @EnvironmentObject private var model: AccountsModel
     let slot: AccountSlot
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(alignment: .firstTextBaseline) {
-                HStack(alignment: .top, spacing: 8) {
-                    ProviderIcon(provider: slot.provider, size: 22)
-                        .padding(.top, 1)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(slot.title)
-                            .font(.system(size: 13, weight: .semibold))
-                            .lineLimit(1)
-                        if let planType = slot.planType {
-                            Text(planType)
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                }
-                Spacer()
-                statusControl
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(alignment: .center, spacing: 8) {
+                Text(slot.provider.displayName)
+                    .font(.system(size: 13, weight: .semibold))
+                    .lineLimit(1)
+                Spacer(minLength: 8)
+                trailingControl
             }
 
-            content
+            if let email = slot.email {
+                Text(email)
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+                    .textSelection(.enabled)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            if let planType = slot.planType {
+                Text(planType)
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+            }
+
+            detail
         }
-        .padding(8)
-        .background(
-            RoundedRectangle(cornerRadius: 8)
-                .fill(Color(nsColor: .controlBackgroundColor).opacity(0.48))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 8)
-                .stroke(Color(nsColor: .separatorColor).opacity(0.24), lineWidth: 0.5)
-        )
+        .padding(.horizontal, 14)
+        .padding(.vertical, 9)
     }
 
     @ViewBuilder
-    private var content: some View {
+    private var detail: some View {
         switch slot.status {
         case .starting, .loading, .authenticating:
-            HStack(spacing: 8) {
+            HStack(spacing: 7) {
                 ProgressView()
                     .controlSize(.small)
+                    .scaleEffect(0.8)
                 Text(statusText)
-                    .font(.caption)
+                    .font(.system(size: 11))
                     .foregroundStyle(.secondary)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.vertical, 6)
 
         case .unauthenticated:
-            HStack {
-                Text(slot.provider == .claude ? "Not connected to Claude" : "Not signed in")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                Spacer()
-            }
-
+            Text(slot.provider == .claude ? "Not connected to Claude" : "Not signed in")
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+    
         case .ready, .loginRequired:
-            VStack(alignment: .leading, spacing: 7) {
+            VStack(alignment: .leading, spacing: 6) {
                 if slot.status == .loginRequired {
-                    HStack(spacing: 6) {
+                    HStack(spacing: 4) {
                         Image(systemName: "exclamationmark.triangle.fill")
-                            .font(.caption2)
+                            .font(.system(size: 10))
                         Text("Login required · showing last known limits")
-                            .font(.caption2)
+                            .font(.system(size: 11))
                             .lineLimit(1)
                     }
                     .foregroundStyle(.orange)
                 }
                 UsageBar(window: slot.weekly ?? placeholderWindow("Weekly limit"), showsResetDate: true)
-                    .opacity(slot.displayDimmed ? 0.68 : 1)
+                    .opacity(slot.displayDimmed ? 0.6 : 1)
                 UsageBar(window: slot.fiveHour ?? placeholderWindow("5-hour limit"), showsResetDate: true)
-                    .opacity(slot.displayDimmed ? 0.68 : 1)
+                    .opacity(slot.displayDimmed ? 0.6 : 1)
             }
 
         case .error(let message):
             Text(message)
-                .font(.caption)
+                .font(.system(size: 11))
                 .foregroundStyle(.red)
                 .lineLimit(3)
-        }
+            }
     }
 
     @ViewBuilder
-    private var statusControl: some View {
+    private var trailingControl: some View {
         let actions = slot.availableActions
         if actions.contains(.login) {
-            HStack(spacing: 8) {
-                Button("Log in") {
+            HStack(spacing: 6) {
+                Button("Log In") {
                     Task { await model.login(slot.id) }
                 }
                 .controlSize(.small)
 
                 if actions.contains(.remove) {
-                    Button("Remove", role: .destructive) {
+                    Button {
                         model.removeAccount(slot.id)
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 9, weight: .semibold))
                     }
+                    .buttonStyle(.borderless)
                     .controlSize(.small)
+                    .help("Remove account")
                 }
             }
         } else if slot.status == .authenticating {
             Text("Waiting")
-                .font(.caption)
+                .font(.system(size: 11))
                 .foregroundStyle(.secondary)
-        } else {
-            HStack(spacing: 8) {
-                if actions.contains(.refresh) {
-                    Button {
-                        Task { await model.refresh(slot.id) }
-                    } label: {
-                        Image(systemName: "arrow.clockwise")
-                    }
-                    .help("Refresh")
-                }
-                if actions.contains(.remove) {
-                    Button(role: .destructive) {
-                        model.removeAccount(slot.id)
-                    } label: {
-                        Image(systemName: "trash")
-                    }
-                    .help("Remove")
-                } else if actions.contains(.logout) {
-                    Button(role: .destructive) {
-                        Task { await model.logout(slot.id) }
-                    } label: {
-                        Image(systemName: "rectangle.portrait.and.arrow.right")
-                    }
-                    .help("Logout")
-                }
+        } else if actions.contains(.logout) {
+            Button("Sign Out") {
+                Task { await model.logout(slot.id) }
             }
-            .buttonStyle(.plain)
             .controlSize(.small)
-            .fixedSize()
+        } else if actions.contains(.remove) {
+            Button {
+                model.removeAccount(slot.id)
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 9, weight: .semibold))
+            }
+            .buttonStyle(.borderless)
+            .controlSize(.small)
+            .foregroundStyle(.secondary)
             .focusEffectDisabled()
-            .help("Account actions")
+            .help("Remove account")
         }
     }
 
@@ -214,14 +177,14 @@ struct UsageBar: View {
     var showsResetDate = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 3) {
             HStack {
                 Text(window.label)
-                    .font(.caption)
+                    .font(.system(size: 11))
                     .foregroundStyle(.secondary)
                 Spacer()
-                Text("\(window.usedPercent)% used · \(window.remainingPercent)% left")
-                    .font(.caption)
+                Text("\(window.usedPercent)% used")
+                    .font(.system(size: 11))
                     .monospacedDigit()
                     .foregroundStyle(.secondary)
             }
@@ -231,26 +194,18 @@ struct UsageBar: View {
                     Capsule()
                         .fill(Color(nsColor: .quaternaryLabelColor))
                     Capsule()
-                        .fill(color)
+                        .fill(Color(nsColor: .secondaryLabelColor))
                         .frame(width: proxy.size.width * CGFloat(max(0, min(100, window.usedPercent))) / 100)
                 }
             }
-            .frame(height: 7)
+            .frame(height: 5)
 
             if showsResetDate, let resetsAt = window.resetsAt {
                 Text("Resets \(Self.resetFormatter.string(from: resetsAt))")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .font(.system(size: 10))
+                    .foregroundStyle(.tertiary)
                     .lineLimit(1)
             }
-        }
-    }
-
-    private var color: Color {
-        switch window.usedPercent {
-        case 0..<65: .accentColor
-        case 65..<88: .orange
-        default: .red
         }
     }
 

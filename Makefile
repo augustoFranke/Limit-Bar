@@ -23,7 +23,6 @@ app: build
 	cp "$(BUILD_DIR)/$(APP_NAME)" "$(MACOS)/$(APP_NAME)"
 	cp Info.plist "$(CONTENTS)/Info.plist"
 	cp Resources/AppIcon.icns "$(RESOURCES)/AppIcon.icns"
-	cp Resources/StatusIcon.png "$(RESOURCES)/StatusIcon.png"
 	codesign --force --deep --sign - "$(APP_DIR)"
 
 run: app
