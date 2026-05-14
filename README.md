@@ -8,9 +8,9 @@ Native macOS menu-bar app for monitoring AI usage limits across multiple account
 
 - **Multiple Codex accounts** — add as many isolated Codex accounts as you need; each gets its own profile and `codex app-server` process.
 - **Claude Code** — automatically picks up the OAuth token written by `claude login`; no extra setup.
-- **Live usage bars** — 5-hour and weekly limit windows with percentage used, colour-coded by pressure (green → orange → red).
+- **Live usage bars** — 5-hour and weekly limit windows with percentage used and reset time.
 - **Reset notifications** — schedules a system notification for each window reset so you know when limits clear.
-- **Auto-refresh** — polls every minute and force-refreshes on wake from sleep; manual refresh button always available.
+- **Auto-refresh** — polls every minute and force-refreshes on wake from sleep; **Refresh All** (⌘R) is always one menu item away.
 - **Last-known limits** — if a session expires, the last-known usage is shown dimmed with a "Login required" banner so you still have context while re-authenticating.
 
 ## Install
@@ -39,9 +39,9 @@ Limit Bar reads the OAuth token written by the Claude Code CLI to `~/.claude/.cr
 
 1. Install Claude Code from [claude.ai/claude-code](https://claude.ai/claude-code).
 2. Run `claude login` once and complete the browser sign-in.
-3. Open Limit Bar and click **Add Claude Account**.
+3. Open Limit Bar and choose **Add Claude Account…** from the menu.
 
-If credentials expire, the slot shows "Login required" with last-known limits dimmed. Run `claude login` again and click **Log in** in the menu to refresh.
+If credentials expire, the slot shows "Login required" with last-known limits dimmed. Run `claude login` again, then click **Log In** in the menu to refresh.
 
 ## Build from Source
 
