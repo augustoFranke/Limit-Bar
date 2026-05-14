@@ -161,32 +161,33 @@ struct AccountCard: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
         } else {
-            Menu {
+            HStack(spacing: 8) {
                 if actions.contains(.refresh) {
                     Button {
                         Task { await model.refresh(slot.id) }
                     } label: {
-                        Label("Refresh", systemImage: "arrow.clockwise")
+                        Image(systemName: "arrow.clockwise")
                     }
+                    .help("Refresh")
                 }
                 if actions.contains(.remove) {
                     Button(role: .destructive) {
                         model.removeAccount(slot.id)
                     } label: {
-                        Label("Remove", systemImage: "rectangle.portrait.and.arrow.right")
+                        Image(systemName: "trash")
                     }
+                    .help("Remove")
                 } else if actions.contains(.logout) {
                     Button(role: .destructive) {
                         Task { await model.logout(slot.id) }
                     } label: {
-                        Label("Logout", systemImage: "rectangle.portrait.and.arrow.right")
+                        Image(systemName: "rectangle.portrait.and.arrow.right")
                     }
+                    .help("Logout")
                 }
-            } label: {
-                Image(systemName: "ellipsis.circle")
             }
-            .menuStyle(.borderlessButton)
-            .menuIndicator(.hidden)
+            .buttonStyle(.plain)
+            .controlSize(.small)
             .fixedSize()
             .focusEffectDisabled()
             .help("Account actions")
