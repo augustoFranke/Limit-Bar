@@ -117,6 +117,42 @@ final class AccountsModelTests: XCTestCase {
         XCTAssertEqual(canceled, [9001])
     }
 
+    func testMenuOpenRefreshRespectsDebounce() async {
+        let existing = AccountSlot(id: 9001, provider: .codex, email: "user@example.com", status: .ready)
+        let store = FakeAccountSlotStore(restoredSlots: [existing])
+        let source = FakeUsageSource(provider: .codex)
+        var refreshCount = 0
+        source.refreshHandler = { slot in
+            refreshCount += 1
+            return slot
+        }
+        let model = makeModel(codexSource: source, store: store)
+        await model.start()
+
+        await model.refreshOnMenuOpen()
+        await model.refreshOnMenuOpen()
+
+        XCTAssertEqual(refreshCount, 1)
+    }
+
+    func testManualRefreshForcesThroughMenuOpenDebounce() async {
+        let existing = AccountSlot(id: 9001, provider: .codex, email: "user@example.com", status: .ready)
+        let store = FakeAccountSlotStore(restoredSlots: [existing])
+        let source = FakeUsageSource(provider: .codex)
+        var refreshCount = 0
+        source.refreshHandler = { slot in
+            refreshCount += 1
+            return slot
+        }
+        let model = makeModel(codexSource: source, store: store)
+        await model.start()
+
+        await model.refreshOnMenuOpen()
+        await model.refreshAll()
+
+        XCTAssertEqual(refreshCount, 2)
+    }
+
     private func makeModel(
         codexSource: FakeUsageSource? = nil,
         claudeSource: FakeUsageSource? = nil,

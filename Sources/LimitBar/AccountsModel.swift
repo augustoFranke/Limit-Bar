@@ -143,9 +143,18 @@ final class AccountsModel: ObservableObject {
     // MARK: - Refresh
 
     func refreshAll() async {
+        await refreshAll(force: true)
+    }
+
+    func refreshOnMenuOpen() async {
+        await refreshAll(force: false)
+    }
+
+    private func refreshAll(force: Bool) async {
+        guard !slots.isEmpty, !isRefreshing else { return }
         isRefreshing = true
         defer { isRefreshing = false }
-        await scheduler?.kick(force: true)
+        await scheduler?.kick(force: force)
     }
 
     func refresh(_ index: Int) async { await refresh(index, force: true) }

@@ -8,9 +8,10 @@ Native macOS menu-bar app for monitoring AI usage limits across multiple account
 
 - **Multiple Codex accounts** — add as many isolated Codex accounts as you need; each gets its own profile and `codex app-server` process.
 - **Claude Code** — automatically picks up the OAuth token written by `claude login`; no extra setup.
+- **Native menu-bar UI** — lives in the macOS menu bar with a real AppKit menu that resizes as accounts are added or removed.
 - **Live usage bars** — 5-hour and weekly limit windows with percentage used and reset time.
 - **Reset notifications** — schedules a system notification for each window reset so you know when limits clear.
-- **Auto-refresh** — polls every minute and force-refreshes on wake from sleep; **Refresh All** (⌘R) is always one menu item away.
+- **Fresh-on-open limits** — refreshes on launch, wake from sleep, account login, and when you open the menu, with a short debounce to avoid unnecessary provider calls. **Refresh All** (⌘R) is always one menu item away.
 - **Last-known limits** — if a session expires, the last-known usage is shown dimmed with a "Login required" banner so you still have context while re-authenticating.
 
 ## Install

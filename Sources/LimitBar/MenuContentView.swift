@@ -4,32 +4,42 @@ struct MenuContentView: View {
     @EnvironmentObject private var model: AccountsModel
 
     var body: some View {
-        Group {
+        VStack(alignment: .leading, spacing: 0) {
+            sectionHeader
+
             if model.slots.isEmpty {
                 emptyState
             } else {
-                VStack(spacing: 0) {
-                    ForEach(Array(model.slots.enumerated()), id: \.element.id) { index, slot in
-                        if index > 0 {
-                            Divider()
-                        }
-                        AccountRow(slot: slot)
+                ForEach(Array(model.slots.enumerated()), id: \.element.id) { index, slot in
+                    if index > 0 {
+                        Divider()
+                            .padding(.horizontal, 10)
                     }
+                    AccountRow(slot: slot)
                 }
             }
         }
         .foregroundStyle(.primary)
     }
 
+    /// Custom "Accounts" header — mimics the native NSMenuItem.sectionHeader
+    /// look (small semibold secondary text) but with tighter vertical padding
+    /// than AppKit's default.
+    private var sectionHeader: some View {
+        Text("Accounts")
+            .font(.system(size: 11, weight: .semibold))
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, 14)
+            .padding(.top, 4)
+            .padding(.bottom, 2)
+    }
+
     private var emptyState: some View {
-        HStack {
-            Text("No accounts")
-                .font(.system(size: 13))
-                .foregroundStyle(.secondary)
-            Spacer()
-        }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 10)
+        Text("No accounts")
+            .font(.system(size: 13))
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 6)
     }
 }
 

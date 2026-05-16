@@ -1,13 +1,10 @@
 import Foundation
 
-/// Tunables for refresh cadence, login deadlines, and limit-window classification.
-/// Pulled out of inline call sites so the cadence is reviewable in one place.
+/// Tunables for refresh behavior, login deadlines, and limit-window classification.
+/// Pulled out of inline call sites so the behavior is reviewable in one place.
 enum LimitBarConstants {
-    /// How often the refresh scheduler fires.
-    static let refreshInterval: TimeInterval = 60
-
     /// Minimum time between two consecutive refreshes of the same slot.
-    /// Prevents the manual Refresh button from racing the auto-refresh tick.
+    /// Prevents repeated menu-open/manual refreshes from hammering providers.
     static let refreshDebounce: TimeInterval = 15
 
     /// Total time we wait for the user to complete an interactive Codex login.

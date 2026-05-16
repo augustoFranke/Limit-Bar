@@ -1,4 +1,5 @@
 import AppKit
+import Combine
 import SwiftUI
 import UserNotifications
 
@@ -15,6 +16,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
     private var refreshAllMenuItem: NSMenuItem?
     private var addCodexMenuItem: NSMenuItem?
     private var addClaudeMenuItem: NSMenuItem?
+    private var modelCancellable: AnyCancellable?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
@@ -49,6 +51,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
             .frame(width: MenuLayout.width)
 
         let hostingView = NSHostingView(rootView: rootView)
+        hostingView.sizingOptions = [.intrinsicContentSize]
         let fittingHeight = hostingView.fittingSize.height
         hostingView.frame = NSRect(x: 0, y: 0, width: MenuLayout.width, height: fittingHeight)
         hostingView.wantsLayer = true
@@ -59,7 +62,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
 
         let menu = NSMenu()
         menu.autoenablesItems = false
-        menu.addItem(.sectionHeader(title: "Accounts"))
         menu.addItem(contentItem)
         menu.addItem(.separator())
 
@@ -109,6 +111,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         self.refreshAllMenuItem = refreshAll
         self.addCodexMenuItem = addCodex
         self.addClaudeMenuItem = addClaude
+
+        modelCancellable = model.objectWillChange
+            .receive(on: RunLoop.main)
+            .sink { [weak self] in
+                self?.resizeMenuContentToFit()
+            }
+    }
+
+    /// Resize the SwiftUI-hosted menu item to its current intrinsic height so
+    /// that adding/removing accounts (or other content changes) updates the
+    /// open menu's bounds immediately, instead of staying clamped to the size
+    /// captured when the menu last opened.
+    private func resizeMenuContentToFit() {
+        guard let hostingView = menuContentItem?.view else { return }
+        let fitting = hostingView.fittingSize
+        guard fitting.height > 0,
+              abs(hostingView.frame.height - fitting.height) > 0.5 else { return }
+        hostingView.frame = NSRect(x: 0, y: 0, width: MenuLayout.width, height: fitting.height)
     }
 
     @objc private func refreshAll(_ sender: NSMenuItem) {
@@ -140,14 +160,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
 
 extension AppDelegate: NSMenuDelegate {
     func menuWillOpen(_ menu: NSMenu) {
+        Task { await model.refreshOnMenuOpen() }
+
         let canAddAccount = model.pendingAdd == nil
         addCodexMenuItem?.isEnabled = canAddAccount
         addClaudeMenuItem?.isEnabled = canAddAccount
         refreshAllMenuItem?.isEnabled = !model.slots.isEmpty && !model.isRefreshing
 
-        if let hostingView = menuContentItem?.view {
-            let fitting = hostingView.fittingSize
-            hostingView.frame = NSRect(x: 0, y: 0, width: MenuLayout.width, height: fitting.height)
-        }
+        resizeMenuContentToFit()
     }
 }
